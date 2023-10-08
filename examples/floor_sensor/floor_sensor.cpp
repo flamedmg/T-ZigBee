@@ -26,6 +26,7 @@
 #define CONFIG_NOMINAL_TEMPERATURE 25   // needs to be measusured
 #define CONFIG_NTC_READINGS_NUMBER 10
 #define CONFIG_NTC_READINGS_DELAY 10
+#define CONFIG_ANALOG_RESOLUTION 4095
 #define B_VALUE 3590
 
 #define REPORTING_PERIOD 10
@@ -223,7 +224,7 @@ void setup()
         CONFIG_REFERENCE_RESISTANCE,
         CONFIG_NOMINAL_RESISTANCE,
         CONFIG_NOMINAL_TEMPERATURE,
-        B_VALUE);
+        B_VALUE, CONFIG_ANALOG_RESOLUTION);
     leftThermistor = new AverageThermistor(
         originLeftThermistor,
         CONFIG_NTC_READINGS_NUMBER,
@@ -234,7 +235,7 @@ void setup()
         CONFIG_REFERENCE_RESISTANCE,
         CONFIG_NOMINAL_RESISTANCE,
         CONFIG_NOMINAL_TEMPERATURE,
-        B_VALUE);
+        B_VALUE, CONFIG_ANALOG_RESOLUTION);
     rightThermistor = new AverageThermistor(
         originLeftThermistor,
         CONFIG_NTC_READINGS_NUMBER,
