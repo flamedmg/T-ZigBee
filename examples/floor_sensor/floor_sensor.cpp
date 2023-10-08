@@ -11,7 +11,6 @@
 #include <hci_display.h>
 #include <OneButton.h>
 #include "esp_task_wdt.h"
-#include "DHT.h"
 
 #include <Thermistor.h>
 #include <NTC_Thermistor.h>
@@ -20,9 +19,8 @@
 #define CONFIG_ZIGBEE_MODULE_PIN 0
 #define CONFIG_USR_BUTTON_PIN 2
 #define CONFIG_BLUE_LIGHT_PIN 3
-#define CONFIG_DHT_PIN 4
-#define CONFIG_FLLOOR_SENSOR_LEFT_PIN 5
-#define CONFIG_FLLOOR_SENSOR_RIGHT_PIN 6
+#define CONFIG_FLOOR_SENSOR_LEFT_PIN 5
+#define CONFIG_FLOOR_SENSOR_RIGHT_PIN 6
 #define CONFIG_REFERENCE_RESISTANCE 10000
 #define CONFIG_NOMINAL_RESISTANCE 10000 // needs to be measusured
 #define CONFIG_NOMINAL_TEMPERATURE 25   // needs to be measusured
@@ -31,10 +29,6 @@
 #define B_VALUE 3590
 
 #define REPORTING_PERIOD 10
-
-#define DHT_TYPE DHT22
-
-DHT dht(CONFIG_DHT_PIN, DHT_TYPE);
 
 Thermistor *leftThermistor = NULL;
 Thermistor *rightThermistor = NULL;
@@ -63,16 +57,15 @@ void handleClick(void)
     sDstAddr.u16DstAddr = 0x0000;
     if (netState == 1)
     {
-        int16_t h = (int)(dht.readHumidity() * 100);
-        int16_t t = (int)(dht.readTemperature() * 100);
-        Serial.printf("temp=%f, humi=%f\n", (float)(t / 100.0), (float)(h / 100.0));
-        // char temp[5], humi[5];
-        // sprintf(temp, "%04d\0", t);
-        // sprintf(humi, "%04d\0", h);
-        zbhci_ZclSendReportCmd(0x02, sDstAddr, 1, 1, 0, 1, 0x0402, 0x0000, ZCL_DATA_TYPE_DATA16, 2, (uint8_t *)&t);
-        delay(100);
-        zbhci_ZclSendReportCmd(0x02, sDstAddr, 1, 1, 0, 1, 0x0405, 0x0000, ZCL_DATA_TYPE_DATA16, 2, (uint8_t *)&h);
-        delay(100);
+        int16_t lt = leftThermistor->readCelsius();
+        int16_t rt = rightThermistor->readCelsius();
+
+        Serial.printf("temp-left=%f, temp-right=%f\n", (float)(lt / 100.0), (float)(rt / 100.0));
+
+        zbhci_ZclSendReportCmd(0x02, sDstAddr, 1, 1, 0, 1, 0x0402, 0x0000, ZCL_DATA_TYPE_DATA16, 2, (uint8_t *)&rt);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+        zbhci_ZclSendReportCmd(0x02, sDstAddr, 1, 1, 0, 1, 0x0402, 0x0000, ZCL_DATA_TYPE_DATA16, 2, (uint8_t *)&rt);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
     else
     {
@@ -225,10 +218,8 @@ void setup()
     pinMode(CONFIG_BLUE_LIGHT_PIN, OUTPUT);
     digitalWrite(CONFIG_BLUE_LIGHT_PIN, LOW);
 
-    dht.begin();
-
     Thermistor *originLeftThermistor = new NTC_Thermistor(
-        CONFIG_FLLOOR_SENSOR_LEFT_PIN,
+        CONFIG_FLOOR_SENSOR_LEFT_PIN,
         CONFIG_REFERENCE_RESISTANCE,
         CONFIG_NOMINAL_RESISTANCE,
         CONFIG_NOMINAL_TEMPERATURE,
@@ -239,7 +230,7 @@ void setup()
         CONFIG_NTC_READINGS_DELAY);
 
     Thermistor *originrightThermistor = new NTC_Thermistor(
-        CONFIG_FLLOOR_SENSOR_LEFT_PIN,
+        CONFIG_FLOOR_SENSOR_RIGHT_PIN,
         CONFIG_REFERENCE_RESISTANCE,
         CONFIG_NOMINAL_RESISTANCE,
         CONFIG_NOMINAL_TEMPERATURE,
