@@ -122,6 +122,7 @@ void reportTask(void *pvParameters)
     {
         digitalWrite(CONFIG_BLUE_LIGHT_PIN, true);
 
+        
         h = (int) (dht.readHumidity()*100);
         t = (int) (dht.readTemperature()*100);
         //Serial.printf("temp=%f, humi=%f\n", (float)(t/100.0), (float)(h/100.0));
